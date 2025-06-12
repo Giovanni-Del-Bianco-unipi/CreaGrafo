@@ -135,7 +135,6 @@ public class CreaGrafo {
                     attori.put(codice, attore);
                 } catch (NumberFormatException | StringIndexOutOfBoundsException e) {
                     // Ignora silenziosamente le righe con formati numerici o di codice non validi.
-                    // In un'applicazione reale, potremmo volerle registrare in un file di log.
                 }
             }
         } catch (IOException e) {
@@ -146,15 +145,9 @@ public class CreaGrafo {
         System.out.println("-> Trovati " + attori.size() + " attori che soddisfano i criteri.");
 
 
-        // --- PASSO 2: Leggere 'title.basics.tsv' (come da richiesta) ---
-        // Sebbene i nomi dei titoli non siano usati nell'output finale (che richiede solo codici),
-        // il progetto chiede di "utilizzare" questo file. Lo leggiamo per completezza.
-        // In una versione estesa, potremmo usare questa mappa per stampare nomi leggibili.
+        // --- PASSO 2: Leggere 'title.basics.tsv' ---
         System.out.println("\nPASSO 2: Elaborazione di " + pathTitleBasics + " (opzionale per output finale)...");
-        // Non memorizziamo i dati per risparmiare memoria, dato che non sono richiesti nell'output.
-        // Se fossero serviti, avremmo usato una Map<Integer, String> come nel tuo codice originale.
-        // L'importante è dimostrare di poterlo processare.
-        // In questo codice 'raffinato', saltiamo la memorizzazione per ottimizzare la RAM.
+        // Non memorizziamo i dati per risparmiare memoria
         System.out.println("-> File 'title.basics.tsv' scansionato. (Dati non memorizzati per ottimizzare la memoria).");
 
 
