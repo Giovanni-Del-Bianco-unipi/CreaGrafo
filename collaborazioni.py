@@ -6,15 +6,15 @@ from collections import defaultdict
 
 def carica_titoli(percorso_file):
     """
-    Carica i titoli dal file TSV, salvando gli ID SENZA il prefisso 'tt'.
-    Questo permette di collegare i dati con 'partecipazioni.txt'.
-    Legge il file una sola volta e crea un dizionario per ricerche veloci.
+    Carica i titoli dal file TSV.
+    Crea un dizionario che mappa l'ID NUMERICO (senza zeri iniziali)
+    al nome del titolo, per essere compatibile con partecipazioni.txt.
 
     Args:
         percorso_file (str): Il percorso del file title.basics.tsv.
 
     Returns:
-        dict: Un dizionario che mappa l'ID numerico del titolo al nome del titolo.
+        dict: Un dizionario che mappa l'ID numerico (stringa) al nome del titolo.
     """
     titoli = {}
     print(f"INFO: Inizio lettura del file dei titoli: {percorso_file}")
@@ -24,11 +24,23 @@ def carica_titoli(percorso_file):
             for linea in f:
                 campi = linea.strip().split('\t')
                 if len(campi) > 2:
-                    tconst = campi[0]          # es. "tt0000001"
-                    primary_title = campi[2]
-                    # Rimuove il prefisso "tt" e converte in stringa numerica
-                    id_numerico = tconst.lstrip('t')
-                    titoli[id_numerico] = primary_title
+                    tconst = campi[0]          # es. "tt0061452"
+                    primary_title = campi[2]   # es. "The Conversation"
+                    
+                    if tconst.startswith('tt'):
+                        try:
+                            # ESTRAE la parte numerica come stringa ("0061452")
+                            id_numerico_con_zeri = tconst[2:]
+                            # CONVERTE in intero (61452) per eliminare gli zeri...
+                            id_come_int = int(id_numerico_con_zeri)
+                            # ...E RICONVERTE in stringa ("61452") per usarla come chiave.
+                            id_pulito_str = str(id_come_int)
+                            
+                            titoli[id_pulito_str] = primary_title
+                        except ValueError:
+                            # Ignora ID non numerici, per sicurezza
+                            continue
+                        
     except FileNotFoundError:
         print(f"ERRORE: File non trovato: {percorso_file}", file=sys.stderr)
         return None
@@ -41,38 +53,36 @@ def carica_titoli(percorso_file):
 
 def carica_partecipazioni(percorso_file):
     """
-    Carica le partecipazioni dal file aggregato per titolo.
-    Crea un dizionario che mappa ogni attore (ID numerico) all'insieme (set)
-    degli ID numerici dei titoli a cui ha partecipato.
+    Carica le partecipazioni dal file generato da CreaGrafo.java.
+    Il formato atteso per ogni riga è: <id_attore> <num_titoli> <id_titolo1> ...
+    Crea un dizionario che mappa ogni attore (ID stringa) all'insieme (set)
+    degli ID dei titoli (stringhe) a cui ha partecipato.
 
     Args:
         percorso_file (str): Il percorso del file partecipazioni.txt.
 
     Returns:
-        defaultdict: Dizionario ID_attore -> {set di ID_titoli}.
+        dict: Dizionario ID_attore -> {set di ID_titoli}.
     """
-    partecipazioni_attore = defaultdict(set)
+    partecipazioni_attore = {}
     print(f"INFO: Inizio lettura del file delle partecipazioni: {percorso_file}")
     try:
         with open(percorso_file, 'r', encoding='utf-8') as f:
             for linea in f:
-                try:
-                    # La prima colonna è l'ID del titolo, le altre sono gli attori
-                    id_list = linea.strip().split()
-                    if len(id_list) < 2:
-                        continue # Salta righe con solo il titolo o vuote
-                    
-                    id_titolo = id_list[0]
-                    id_attori_nel_titolo = id_list[1:]
+                campi = linea.strip().split()
+                if len(campi) < 2:
+                    continue  # Salta righe vuote o malformate
 
-                    # Per ogni attore in quella riga, aggiungi l'ID del titolo
-                    # al suo set di partecipazioni.
-                    for id_attore in id_attori_nel_titolo:
-                        partecipazioni_attore[id_attore].add(id_titolo)
+                # Il primo campo è l'ID dell'attore
+                id_attore = campi[0]
+                # I campi dal terzo in poi sono gli ID dei titoli
+                # campi[1] è il numero di titoli, che possiamo ignorare qui.
+                id_titoli = campi[2:]
 
-                except ValueError:
-                    # Ignora righe mal formattate
-                    continue
+                # Aggiungiamo l'attore al dizionario con l'insieme dei suoi titoli.
+                # Usare un set è efficiente e gestisce eventuali duplicati.
+                partecipazioni_attore[id_attore] = set(id_titoli)
+
     except FileNotFoundError:
         print(f"ERRORE: File non trovato: {percorso_file}", file=sys.stderr)
         return None

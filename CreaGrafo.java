@@ -65,25 +65,45 @@ class Attore {
  */
 public class CreaGrafo {
 
-    /**
+        /**
      * Metodo principale eseguito all'avvio del programma.
+     * Gestisce dinamicamente 2 o 3 argomenti per compatibilità con lo script di test.
      * @param args Argomenti dalla linea di comando:
-     *             args[0]: percorso a name.basics.tsv
-     *             args[1]: percorso a title.principals.tsv
-     *             args[2]: percorso a title.basics.tsv
+     *             - Caso 2 argomenti (test): <file_nomi.tsv> <file_titoli.tsv>
+     *             - Caso 3 argomenti (manuale): <name.basics.tsv> <title.principals.tsv> <title.basics.tsv>
      */
     public static void main(String[] args) {
-        // Controllo che il numero di argomenti sia corretto.
-        if (args.length != 3) { 
-            System.err.println("Uso: java CreaGrafo <name.basics.tsv> <title.principals.tsv> <title.basics.tsv>");
+        // Controllo se il numero di argomenti è valido (deve essere 2 o 3).
+        if (args.length != 2 && args.length != 3) { 
+            // Se non è né 2 né 3, allora è un errore. Mostra un messaggio di aiuto completo.
+            System.err.println("Errore: Numero di argomenti non valido.");
+            System.err.println("Uso per il TEST AUTOMATICO (2 argomenti): java CreaGrafo <file_nomi.tsv> <file_titoli.tsv>");
+            System.err.println("Uso per esecuzione MANUALE (3 argomenti): java CreaGrafo <name.basics.tsv> <title.principals.tsv> <title.basics.tsv>");
             System.exit(1); // Termina il programma con un codice di errore.
         }
 
+        // Dichiarazione delle variabili per i percorsi dei file.
+        String pathNameBasics;
+        String pathTitlePrincipals;
+        
         // Assegnazione dei percorsi dei file a variabili per maggiore leggibilità.
-        String pathNameBasics = args[0];
-        String pathTitlePrincipals = args[1];
-        String pathTitleBasics = args[2]; 
-
+        // Questa parte gestisce la logica per 2 o 3 argomenti.
+        if (args.length == 2) {
+            System.out.println("INFO: Rilevata esecuzione con 2 argomenti (modalità test).");
+            pathNameBasics = args[0];
+            pathTitlePrincipals = args[1];
+        } else { // In questo ramo, args.length è necessariamente 3.
+            System.out.println("INFO: Rilevata esecuzione con 3 argomenti (modalità manuale).");
+            pathNameBasics = args[0];
+            pathTitlePrincipals = args[1];
+            String pathTitleBasics = args[2]; // Questa variabile è usata solo in questa modalità.
+            
+            // --- PASSO 2 (opzionale): Leggere 'title.basics.tsv' ---
+            // Questo passo viene eseguito SOLO se vengono forniti 3 argomenti.
+            System.out.println("\nPASSO 2: Elaborazione di " + pathTitleBasics + "...");
+            System.out.println("-> File 'title.basics.tsv' scansionato. (Dati non memorizzati per ottimizzare la memoria).");
+        }
+        
         /**
          * La struttura dati centrale per memorizzare gli attori.
          * Usiamo una Mappa (HashMap) che associa un codice (Integer) a un oggetto Attore.
@@ -96,7 +116,7 @@ public class CreaGrafo {
         // Registriamo il tempo di inizio per calcolare la durata totale dell'esecuzione.
         long startTime = System.currentTimeMillis();
 
-        // --- PASSO 1: Leggere 'name.basics.tsv' e filtrare gli attori ---
+        // --- PASSO 1: Leggere il file dei nomi (es. 'name.basics.tsv' o 'miniN.tsv') e filtrare gli attori ---
         System.out.println("PASSO 1: Elaborazione di " + pathNameBasics + " per trovare gli attori...");
         try (BufferedReader br = new BufferedReader(new FileReader(pathNameBasics))) {
             String line;
@@ -145,12 +165,6 @@ public class CreaGrafo {
         System.out.println("-> Trovati " + attori.size() + " attori che soddisfano i criteri.");
 
 
-        // --- PASSO 2: Leggere 'title.basics.tsv' ---
-        System.out.println("\nPASSO 2: Elaborazione di " + pathTitleBasics + " (opzionale per output finale)...");
-        // Non memorizziamo i dati per risparmiare memoria
-        System.out.println("-> File 'title.basics.tsv' scansionato. (Dati non memorizzati per ottimizzare la memoria).");
-
-
         // --- PASSO 3: Scrivere 'nomi.txt' con l'elenco ordinato degli attori ---
         System.out.println("\nPASSO 3: Scrittura del file nomi.txt...");
         // Per scrivere in ordine di codice, estraiamo tutte le chiavi (codici) dalla mappa,
@@ -172,7 +186,7 @@ public class CreaGrafo {
         System.out.println("-> File nomi.txt scritto correttamente con " + codiciAttoriOrdinati.size() + " righe.");
 
 
-        // --- PASSO 4: Leggere 'title.principals.tsv' per costruire il grafo e le partecipazioni ---
+        // --- PASSO 4: Leggere il file dei titoli (es. 'title.principals.tsv') per costruire il grafo e le partecipazioni ---
         System.out.println("\nPASSO 4: Elaborazione di " + pathTitlePrincipals + " per costruire il grafo...");
         try (BufferedReader br = new BufferedReader(new FileReader(pathTitlePrincipals))) {
             String line;
